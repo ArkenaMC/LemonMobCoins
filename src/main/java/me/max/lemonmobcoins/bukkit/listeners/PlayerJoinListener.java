@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -22,21 +22,41 @@
 
 package me.max.lemonmobcoins.bukkit.listeners;
 
-import me.max.lemonmobcoins.common.abstraction.pluginmessaging.AbstractPlayerJoinListener;
-import me.max.lemonmobcoins.common.abstraction.pluginmessaging.AbstractPluginMessageManager;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-public class PlayerJoinListener extends AbstractPlayerJoinListener implements Listener {
+import java.util.*;
 
-    public PlayerJoinListener(AbstractPluginMessageManager pluginMessageManager) {
-        super(pluginMessageManager);
-    }
+public class PlayerJoinListener implements Listener {
+
+    //This should not be reloaded when doing /mc reload which is why we instantiate it statically.
+    private Map<UUID, Double> cache = new HashMap<>();
+    private Timer timer = new Timer();
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        launchTimer();
+    public void onPlayerJoin(PlayerJoinEvent event){
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                for (Map.Entry<UUID, Double> entry : cache.entrySet()) {
+                    ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                    out.writeUTF("LemonMobCoins");
+                    out.writeUTF(entry.getKey().toString());
+                    out.writeDouble(entry.getValue());
+                    event.getPlayer().sendPluginMessage(Bukkit.getPluginManager().getPlugin("LemonMobCoins"), "BungeeCord", out.toByteArray());
+                    Bukkit.getPluginManager().getPlugin("LemonMobCoins").getLogger().info("Sent information of Player " + entry.getKey() + ". Balance sent: " + entry.getValue());
+                }
+                cache.clear();
+            }
+        }, 1500);
     }
 
+    public void addToCache(UUID uuid, double balance){
+        cache.put(uuid, balance);
+    }
 }

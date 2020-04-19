@@ -20,21 +20,18 @@
  *
  */
 
-package me.max.lemonmobcoins.common.utils;
+package me.max.lemonmobcoins.common.exceptions;
 
-import me.max.lemonmobcoins.common.LemonMobCoins;
-import org.jetbrains.annotations.NotNull;
+public class APILoadException extends RuntimeException {
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
+    private Exception e;
 
-public class FileUtil {
+    public APILoadException(Exception e){
+        this.e = e;
+    }
 
-    public static void saveResource(@NotNull String file, File dataFolder, String out) throws IOException {
-        try {
-            Files.copy(LemonMobCoins.class.getResourceAsStream(file), new File(dataFolder, out).toPath());
-        } catch (FileAlreadyExistsException ignored){}
+    @Override
+    public void printStackTrace() {
+        e.printStackTrace();
     }
 }

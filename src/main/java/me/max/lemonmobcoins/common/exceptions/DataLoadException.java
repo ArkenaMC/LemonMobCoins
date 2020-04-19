@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -24,9 +24,9 @@ package me.max.lemonmobcoins.common.exceptions;
 
 public class DataLoadException extends RuntimeException {
 
-    private final Throwable t;
+    private Throwable t;
 
-    public DataLoadException(Throwable t) {
+    public DataLoadException(Throwable t){
         this.t = t;
     }
 
@@ -34,5 +34,4 @@ public class DataLoadException extends RuntimeException {
     public void printStackTrace() {
         t.printStackTrace();
     }
-
 }

@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -23,26 +23,24 @@
 package me.max.lemonmobcoins.common.data;
 
 
-import me.max.lemonmobcoins.common.abstraction.platform.IWrappedPlatform;
+import me.max.lemonmobcoins.common.api.LemonMobCoinsAPI;
 import me.max.lemonmobcoins.common.exceptions.DataLoadException;
-import me.max.lemonmobcoins.common.utils.MapUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class CoinManager {
+public class CoinManager implements LemonMobCoinsAPI{
 
-    private final DataProvider dataProvider;
-    private final Map<UUID, Double> coins;
+    private DataProvider dataProvider;
+    private Map<UUID, Double> coins;
 
     public CoinManager(DataProvider dataProvider) throws DataLoadException {
         this.dataProvider = dataProvider;
         try {
-            coins = MapUtil.sortByValue(dataProvider.loadData());
+            coins = dataProvider.loadData();
         } catch (Throwable t) {
             throw new DataLoadException(t);
         }
@@ -52,22 +50,27 @@ public class CoinManager {
         dataProvider.saveData(coins);
     }
 
-    public double getCoinsOfPlayer(@NotNull UUID uuid) {
+    @Override
+    public double getCoinsOfPlayer(@NotNull UUID uuid){
         return coins.getOrDefault(uuid, 0.0);
     }
 
-    public void setCoinsOfPlayer(@NotNull UUID uuid, double coins) {
+    @Override
+    public void setCoinsOfPlayer(@NotNull UUID uuid, double coins){
         this.coins.put(uuid, coins);
     }
 
-    public void addCoinsToPlayer(@NotNull UUID uuid, double coins) {
+    @Override
+    public void addCoinsToPlayer(@NotNull UUID uuid, double coins){
         setCoinsOfPlayer(uuid, getCoinsOfPlayer(uuid) + coins);
     }
 
-    public void incrementPlayerBalance(@NotNull UUID uuid) {
+    @Override
+    public void incrementPlayerBalance(@NotNull UUID uuid){
         addCoinsToPlayer(uuid, 1);
     }
 
+    @Override
     public void deductCoinsFromPlayer(@NotNull UUID uuid, double price) {
         setCoinsOfPlayer(uuid, getCoinsOfPlayer(uuid) - price);
     }
@@ -75,18 +78,5 @@ public class CoinManager {
     @NotNull
     public Map<UUID, Double> getCoins() {
         return coins;
-    }
-
-    public Map<String, Double> getTopPlayers(int page, IWrappedPlatform platform) {
-        Map<String, Double> topPlayers = new HashMap<>();
-
-        int i = 0;
-        for (Map.Entry<UUID, Double> entry : getCoins().entrySet()){
-            if (i >= (page * 10)) return topPlayers;
-            topPlayers.put(platform.getOfflinePlayer(entry.getKey()).getName(), entry.getValue());
-            i++;
-        }
-
-        return topPlayers;
     }
 }

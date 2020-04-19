@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -22,67 +22,39 @@
 
 package me.max.lemonmobcoins.common.api;
 
-import me.max.lemonmobcoins.common.api.event.LMCEventBus;
-
 import java.util.UUID;
 
-@SuppressWarnings("unused")
-public class LemonMobCoinsAPI {
-
-    private LMCEventBus eventBus;
-
-    public LemonMobCoinsAPI() {
-        this.eventBus = new LMCEventBus();
-    }
+public interface LemonMobCoinsAPI {
 
     /**
-     * @param uuid the uuid of the player of who you want to get the balance.
-     * @return integer amount of balance player has.
+     * @param uuid the uuid of the player of who you want to get the coins.
+     * @return integer amount of coins player has.
      */
-    public double getCoinsOfPlayer(UUID uuid) {
-        return 0;
-    }
+    double getCoinsOfPlayer(UUID uuid);
 
     /**
-     * @param uuid  the uuid of the player to change the balance of.
-     * @param coins integer amount of how many balance to set the player's balance to.
+     * @param uuid the uuid of the player to change the balance of.
+     * @param coins integer amount of how many coins to set the player's balance to.
      */
-    public void setCoinsOfPlayer(UUID uuid, double coins) {
-
-    }
+    void setCoinsOfPlayer(UUID uuid, double coins);
 
     /**
-     * @param uuid  uuid of the player to add the balance to
-     * @param coins amount of balance to add to balance.
+     * @param uuid uuid of the player to add the coins to
+     * @param coins amount of coins to add to balance.
      */
-    public void addCoinsToPlayer(UUID uuid, double coins) {
-
-    }
+    void addCoinsToPlayer(UUID uuid, double coins);
 
     /**
      * Increments the player's balance by 1.
-     *
      * @param uuid the uuid of the player to increment the balance of
      */
-    public void incrementPlayerBalance(UUID uuid) {
-
-    }
+    void incrementPlayerBalance(UUID uuid);
 
     /**
-     * Deducts an amount of balance from the player's balance.
-     *
-     * @param uuid  the uuid of the player from who to deduct the balance
-     * @param coins the amount of balance to deduct.
+     * Deducts an amount of coins from the player's balance.
+     * @param uuid the uuid of the player from who to deduct the coins
+     * @param coins the amount of coins to deduct.
      */
-    public void deductCoinsFromPlayer(UUID uuid, double coins) {
-
-    }
-
-    /**
-     * @return the event bus.
-     */
-    public LMCEventBus getEventBus() {
-        return eventBus;
-    }
+    void deductCoinsFromPlayer(UUID uuid, double coins);
 
 }

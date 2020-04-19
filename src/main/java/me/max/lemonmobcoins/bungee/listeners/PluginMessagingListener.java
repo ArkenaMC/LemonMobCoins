@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -36,36 +36,34 @@ import java.util.UUID;
 
 public class PluginMessagingListener implements Listener {
 
-    private final ProxyServer server;
-    private final CoinManager coinManager;
+    private ProxyServer server;
+    private CoinManager coinManager;
 
-    public PluginMessagingListener(ProxyServer server, CoinManager coinManager) {
+    public PluginMessagingListener(ProxyServer server, CoinManager coinManager){
         this.server = server;
         this.coinManager = coinManager;
     }
 
     @EventHandler
-    public void onPluginMessage(PluginMessageEvent event) {
+    public void onPluginMessage(PluginMessageEvent event){
         if (!event.getTag().equals("BungeeCord")) return;
 
         ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
-        String subChannel = in.readUTF();
-        if (!subChannel.equals("LemonMobCoins")) return;
+        String subchannel = in.readUTF();
+        if (!subchannel.equals("LemonMobCoins")) return;
 
-        String playerUuid = in.readUTF();
+        String playeruuid = in.readUTF();
         double balance = in.readDouble();
-        server.getPluginManager().getPlugin("LemonMobCoins").getLogger()
-              .info("Received information of Player " + playerUuid + ". Balance received: " + balance);
-        coinManager.setCoinsOfPlayer(UUID.fromString(playerUuid), balance);
+        server.getPluginManager().getPlugin("LemonMobCoins").getLogger().info("Received information of Player " + playeruuid + ". Balance received: " + balance);
+        coinManager.setCoinsOfPlayer(UUID.fromString(playeruuid), balance);
 
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("LemonMobCoins");
-        out.writeUTF(playerUuid);
+        out.writeUTF(playeruuid);
         out.writeDouble(balance);
 
         server.getServers().values().forEach(s -> s.sendData("BungeeCord", out.toByteArray(), true));
-        server.getPluginManager().getPlugin("LemonMobCoins").getLogger()
-              .info("Sent information of Player " + playerUuid + ". Balance sent: " + balance);
+        server.getPluginManager().getPlugin("LemonMobCoins").getLogger().info("Sent information of Player " + playeruuid + ". Balance sent: " + balance);
     }
 
 }

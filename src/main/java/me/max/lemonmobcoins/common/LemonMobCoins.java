@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -22,108 +22,58 @@
 
 package me.max.lemonmobcoins.common;
 
-import me.max.lemonmobcoins.common.abstraction.platform.IWrappedPlatform;
 import me.max.lemonmobcoins.common.api.LemonMobCoinsAPI;
-import me.max.lemonmobcoins.common.coinmob.CoinMobManager;
 import me.max.lemonmobcoins.common.data.CoinManager;
 import me.max.lemonmobcoins.common.data.DataProvider;
-import me.max.lemonmobcoins.common.data.providers.MySqlProvider;
-import me.max.lemonmobcoins.common.data.providers.YamlProvider;
 import me.max.lemonmobcoins.common.exceptions.DataLoadException;
-import me.max.lemonmobcoins.common.gui.GuiManager;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
-import org.slf4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LemonMobCoins {
 
     private static LemonMobCoinsAPI lemonMobCoinsAPI;
-    private final Logger logger;
     private CoinManager coinManager;
-    private GuiManager guiManager;
-    private CoinMobManager coinMobManager;
+    private Logger logger;
 
-    public LemonMobCoins(Logger logger, File dataFolder, IWrappedPlatform platform) throws DataLoadException {
+    public LemonMobCoins(DataProvider dataProvider, Logger logger) throws DataLoadException {
         this.logger = logger;
 
-        try {
-            info("Loading data..");
-            ConfigurationLoader<ConfigurationNode> loader = YAMLConfigurationLoader.builder()
-                                                                                   .setFile(new File(dataFolder, "config.yml"))
-                                                                                   .build();
-            ConfigurationNode node = loader.load();
-
-            String storageType = node.getNode("storage", "type").getString("flatfile");
-            DataProvider dataProvider;
-
-            if (storageType.equalsIgnoreCase("mysql")) {
-                ConfigurationNode mysqlSection = node.getNode("storage", "mysql");
-                dataProvider = new MySqlProvider(mysqlSection.getNode("hostname").getString(), mysqlSection
-                        .getNode("port").getString(), mysqlSection.getNode("username").getString(), mysqlSection
-                        .getNode("password").getString(), mysqlSection.getNode("database").getString());
-            } else {
-                error("Invalid storage type found! Using flatfile!");
-                dataProvider = new YamlProvider(dataFolder.toString());
-            }
-
-            coinManager = new CoinManager(dataProvider);
-            guiManager = new GuiManager(node, getLogger(), platform);
-            coinMobManager = new CoinMobManager(node);
-            info("Loaded data!");
-        } catch (SQLException e) {
-            error("Failed loading MySql!");
-            e.printStackTrace();
-            return;
-        } catch (DataLoadException | IOException e) {
-            error("Failed loading data!");
-            e.printStackTrace();
-            return;
-        }
+        info("Loading data..");
+        coinManager = new CoinManager(dataProvider);
+        info("Loaded data!");
 
         info("Loading API..");
-        lemonMobCoinsAPI = new LemonMobCoinsAPI();
+        lemonMobCoinsAPI = coinManager;
         info("Loaded API!");
     }
 
-    public static LemonMobCoinsAPI getLemonMobCoinsAPI() {
-        return lemonMobCoinsAPI;
-    }
-
-    public void disable() throws IOException, SQLException {
+    public void disable() throws IOException, SQLException{
         getCoinManager().saveData();
     }
 
-    private void info(String s) {
-        getLogger().info(s);
+    private void info(String s){
+        log(Level.INFO, s);
     }
 
-    private void warn(String s) {
-        getLogger().warn(s);
-    }
-
-    private void error(String s) {
-        getLogger().error(s);
+    private void log(Level level, String s){
+        getLogger().log(level, s);
     }
 
     public CoinManager getCoinManager() {
         return coinManager;
     }
 
-    public GuiManager getGuiManager() {
-        return guiManager;
+    @SuppressWarnings("unused")
+    public static LemonMobCoinsAPI getLemonMobCoinsAPI() {
+        return lemonMobCoinsAPI;
     }
 
-    public CoinMobManager getCoinMobManager() {
-        return coinMobManager;
-    }
-
+    @NotNull
     private Logger getLogger() {
         return logger;
     }
-
 }

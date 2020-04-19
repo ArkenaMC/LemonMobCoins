@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -22,18 +22,14 @@
 
 package me.max.lemonmobcoins.bukkit.listeners;
 
-import me.max.lemonmobcoins.bukkit.impl.entity.PlayerBukkitImpl;
-import me.max.lemonmobcoins.bukkit.impl.inventory.InventoryHolderBukkitImpl;
-import me.max.lemonmobcoins.bukkit.impl.inventory.ItemStackBukkitImpl;
-import me.max.lemonmobcoins.common.LemonMobCoins;
-import me.max.lemonmobcoins.common.abstraction.pluginmessaging.AbstractPluginMessageManager;
-import me.max.lemonmobcoins.common.api.event.shop.PlayerPurchaseItemEvent;
+import me.max.lemonmobcoins.bukkit.PluginMessageManager;
+import me.max.lemonmobcoins.bukkit.gui.GuiHolder;
+import me.max.lemonmobcoins.bukkit.gui.GuiManager;
+import me.max.lemonmobcoins.bukkit.gui.GuiMobCoinItem;
+import me.max.lemonmobcoins.bukkit.messages.Messages;
 import me.max.lemonmobcoins.common.data.CoinManager;
-import me.max.lemonmobcoins.common.gui.GuiManager;
-import me.max.lemonmobcoins.common.gui.ShopItem;
-import me.max.lemonmobcoins.common.messages.Messages;
-import me.max.lemonmobcoins.common.utils.ColorUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,50 +37,41 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class InventoryClickListener implements Listener {
 
-    private final CoinManager coinManager;
-    private final GuiManager guiManager;
-    private final AbstractPluginMessageManager pluginMessageManager;
+    private CoinManager coinManager;
+    private GuiManager guiManager;
+    private PluginMessageManager pluginMessageManager;
 
-    public InventoryClickListener(CoinManager coinManager, GuiManager guiManager, AbstractPluginMessageManager pluginMessageManager) {
+    public InventoryClickListener(CoinManager coinManager, GuiManager guiManager, PluginMessageManager pluginMessageManager){
         this.coinManager = coinManager;
         this.guiManager = guiManager;
         this.pluginMessageManager = pluginMessageManager;
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
+    public void onInventoryClick(InventoryClickEvent event){
         if (event.getCurrentItem() == null) return;
-        if (!(event.getInventory().getHolder() instanceof InventoryHolderBukkitImpl)) return;
+        if (!(event.getInventory().getHolder() instanceof GuiHolder)) return;
         event.setCancelled(true);
 
         Player p = (Player) event.getWhoClicked();
-        ShopItem item = guiManager.getShopItem(new ItemStackBukkitImpl(event.getCurrentItem()));
+        GuiMobCoinItem item = guiManager.getGuiMobCoinItemFromItemStack(event.getCurrentItem());
 
-        if (item.isPermission()) {
+        if (item.isPermission()){
             if (!p.hasPermission("lemonmobcoins.buy." + item.getIdentifier())) {
-                p.sendMessage(Messages.NO_PERMISSION_TO_PURCHASE
-                        .getMessage(coinManager.getCoinsOfPlayer(p.getUniqueId()), p.getName(), null, 0));
+                p.sendMessage(Messages.NO_PERMISSION_TO_PURCHASE.getMessage(coinManager, p, null, 0));
                 return;
             }
         }
 
-        if (!(coinManager.getCoinsOfPlayer(p.getUniqueId()) >= item.getPrice())) {
-            p.sendMessage(Messages.NOT_ENOUGH_MONEY_TO_PURCHASE
-                    .getMessage(coinManager.getCoinsOfPlayer(p.getUniqueId()), p.getName(), null, 0));
+        if (!(coinManager.getCoinsOfPlayer(p.getUniqueId()) >= item.getPrice())){
+            p.sendMessage(Messages.NOT_ENOUGH_MONEY_TO_PURCHASE.getMessage(coinManager, p, null, 0));
             return;
         }
 
-        PlayerPurchaseItemEvent purchaseItemEvent = new PlayerPurchaseItemEvent(new PlayerBukkitImpl(p), item);
-        if (!LemonMobCoins.getLemonMobCoinsAPI().getEventBus().post(purchaseItemEvent)) {
-            coinManager.deductCoinsFromPlayer(p.getUniqueId(), item.getPrice());
-            if (pluginMessageManager != null) pluginMessageManager.sendPluginMessage(p.getUniqueId());
-            p.sendMessage(Messages.PURCHASED_ITEM_FROM_SHOP
-                    .getMessage(coinManager.getCoinsOfPlayer(p.getUniqueId()), p.getName(), null, item.getPrice())
-                    .replaceAll("%item%", item.getDisplayname()));
-            for (String cmd : item.getCommands())
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), ColorUtil
-                        .colorize(cmd.replaceAll("%player%", p.getName())));
-        }
+        coinManager.deductCoinsFromPlayer(p.getUniqueId(), item.getPrice());
+        if (pluginMessageManager != null) pluginMessageManager.sendPluginMessage(p.getUniqueId(), coinManager.getCoinsOfPlayer(p.getUniqueId()));
+        p.sendMessage(Messages.PURCHASED_ITEM_FROM_SHOP.getMessage(coinManager, p, null, item.getPrice()).replaceAll("%item%", item.getDisplayname()));
+        for (String cmd : item.getCommands()) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), ChatColor.translateAlternateColorCodes('&', cmd.replaceAll("%player%", p.getName())));
     }
 
 }

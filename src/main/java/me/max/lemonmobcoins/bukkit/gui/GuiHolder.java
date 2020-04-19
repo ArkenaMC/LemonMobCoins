@@ -20,21 +20,16 @@
  *
  */
 
-package me.max.lemonmobcoins.common.utils;
+package me.max.lemonmobcoins.bukkit.gui;
 
-import me.max.lemonmobcoins.common.LemonMobCoins;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.jetbrains.annotations.Contract;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-
-public class FileUtil {
-
-    public static void saveResource(@NotNull String file, File dataFolder, String out) throws IOException {
-        try {
-            Files.copy(LemonMobCoins.class.getResourceAsStream(file), new File(dataFolder, out).toPath());
-        } catch (FileAlreadyExistsException ignored){}
+public class GuiHolder implements InventoryHolder {
+    @Override
+    @Contract("-> null")
+    public Inventory getInventory() {
+        return null;
     }
 }

@@ -2,4 +2,10 @@ name: LemonMobCoins
 version: ${project.version}
 author: LemmoTresto
 main: me.max.lemonmobcoins.bukkit.LemonMobCoinsBukkitPlugin
-softdepend: [PlaceholderAPI]
+softdepend: [PlaceholderAPI, Vault]
+commands:
+  mobcoins:
+    description: "Main MobCoins command!"
+    aliases: ["mc", "mcoin", "mcoins", "mobc", "mobcoin"]
+  mshop:
+    description: "Opens MobCoins shop!"

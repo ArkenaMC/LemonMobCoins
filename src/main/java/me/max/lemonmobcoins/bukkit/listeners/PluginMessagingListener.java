@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -27,16 +27,16 @@ import com.google.common.io.ByteStreams;
 import me.max.lemonmobcoins.common.data.CoinManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.slf4j.Logger;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class PluginMessagingListener implements PluginMessageListener {
 
-    private final CoinManager coinManager;
-    private final Logger logger;
+    private CoinManager coinManager;
+    private Logger logger;
 
-    public PluginMessagingListener(CoinManager coinManager, Logger logger) {
+    public PluginMessagingListener(CoinManager coinManager, Logger logger){
         this.coinManager = coinManager;
         this.logger = logger;
     }
@@ -46,13 +46,13 @@ public class PluginMessagingListener implements PluginMessageListener {
         if (!channel.equals("BungeeCord")) return;
 
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
-        String subChannel = in.readUTF();
-        if (!subChannel.equals("LemonMobCoins")) return;
+        String subchannel = in.readUTF();
+        if (!subchannel.equals("LemonMobCoins")) return;
 
-        String playerUuid = in.readUTF();
+        //yes we know about the argument player but we want to be able to receive data from offlineplayers too so this could be a random player!
+        String playeruuid = in.readUTF();
         double balance = in.readDouble();
-        coinManager.setCoinsOfPlayer(UUID.fromString(playerUuid), balance);
-        logger.info("Received information of Player " + playerUuid + ". Balance received: " + balance);
+        coinManager.setCoinsOfPlayer(UUID.fromString(playeruuid), balance);
+        logger.info("Received information of Player " + playeruuid + ". Balance received: " + balance);
     }
-
 }

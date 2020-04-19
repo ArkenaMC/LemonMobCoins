@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -22,54 +22,71 @@
 
 package me.max.lemonmobcoins.bukkit.listeners;
 
-import me.max.lemonmobcoins.bukkit.impl.entity.OfflinePlayerBukkitImpl;
-import me.max.lemonmobcoins.common.LemonMobCoins;
-import me.max.lemonmobcoins.common.abstraction.pluginmessaging.AbstractPluginMessageManager;
-import me.max.lemonmobcoins.common.api.event.balance.PlayerBalanceModifiedEvent;
-import me.max.lemonmobcoins.common.coinmob.CoinMob;
-import me.max.lemonmobcoins.common.coinmob.CoinMobManager;
+import me.max.lemonmobcoins.bukkit.PluginMessageManager;
+import me.max.lemonmobcoins.bukkit.coins.CoinMob;
+import me.max.lemonmobcoins.bukkit.messages.Messages;
 import me.max.lemonmobcoins.common.data.CoinManager;
-import me.max.lemonmobcoins.common.messages.Messages;
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class EntityDeathListener implements Listener {
 
-    private final CoinManager coinManager;
-    private final AbstractPluginMessageManager pluginMessageManager;
-    private final CoinMobManager coinMobManager;
+    private CoinManager coinManager;
+    private List<CoinMob> coinMobList;
+    private PluginMessageManager pluginMessageManager;
 
-    public EntityDeathListener(CoinManager coinManager, CoinMobManager coinMobManager, AbstractPluginMessageManager pluginMessageManager) {
+    public EntityDeathListener(CoinManager coinManager, ConfigurationSection mobList, PluginMessageManager pluginMessageManager){
         this.coinManager = coinManager;
         this.pluginMessageManager = pluginMessageManager;
-        this.coinMobManager = coinMobManager;
+        coinMobList = new ArrayList<>();
+
+        for (String key : mobList.getKeys(false)) {
+            ConfigurationSection coinMob = mobList.getConfigurationSection(key);
+
+            List<String> amounts;
+            String amount = coinMob.getString("amount");
+            if (amount.contains("-")) amounts = Arrays.asList(amount.split("-"));
+            else {
+                amounts = new ArrayList<>();
+                amounts.add(amount);
+                amounts.add("0");
+            }
+
+            coinMobList.add(new CoinMob(EntityType.valueOf(key.toUpperCase()), coinMob.getInt("chance"), Integer.parseInt(amounts.get(0)), Integer.parseInt(amounts.get(1))));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onEntityDeath(EntityDeathEvent event) {
-        Player p = event.getEntity().getKiller();
-        if (p == null) return;
+    public void onEntityDeath(EntityDeathEvent event){
+        if (event.getEntity().getKiller() == null) return;
 
-        CoinMob coinMob = coinMobManager.getCoinMob(event.getEntityType().toString());
+        CoinMob coinMob = getCoinMob(event.getEntityType());
         if (coinMob == null) return;
 
         int amountToDrop = coinMob.getAmountToDrop();
         if (amountToDrop == 0) return;
+        coinManager.addCoinsToPlayer(event.getEntity().getKiller().getUniqueId(), amountToDrop);
+        if (pluginMessageManager != null) pluginMessageManager.sendPluginMessage(event.getEntity().getKiller().getUniqueId(), coinManager.getCoinsOfPlayer(event.getEntity().getKiller().getUniqueId()));
 
-        PlayerBalanceModifiedEvent playerBalanceModifiedEvent = new PlayerBalanceModifiedEvent(new OfflinePlayerBukkitImpl(p), coinManager
-                .getCoinsOfPlayer(p.getUniqueId()), coinManager
-                .getCoinsOfPlayer(p.getUniqueId()) + amountToDrop, PlayerBalanceModifiedEvent.Type.EARN);
-        if (!LemonMobCoins.getLemonMobCoinsAPI().getEventBus().post(playerBalanceModifiedEvent)) {
-            coinManager.addCoinsToPlayer(p.getUniqueId(), amountToDrop);
-            if (pluginMessageManager != null) pluginMessageManager.sendPluginMessage(p.getUniqueId());
+        event.getEntity().getKiller().sendMessage(Messages.RECEIVED_COINS_FROM_KILL.getMessage(coinManager, event.getEntity().getKiller(), event.getEntity(), amountToDrop));
 
-            event.getEntity().getKiller().sendMessage(Messages.RECEIVED_COINS_FROM_KILL
-                    .getMessage(coinManager.getCoinsOfPlayer(p.getUniqueId()), p.getName(), event.getEntity()
-                                                                                                 .getName(), amountToDrop));
-        }
+    }
+
+    private List<CoinMob> getCoinMobList(){
+        return coinMobList;
+    }
+
+    private CoinMob getCoinMob(@NotNull EntityType entityType){
+        return getCoinMobList().stream().filter(coinMob -> coinMob.getMob() == entityType).findFirst().orElse(null);
     }
 
 }

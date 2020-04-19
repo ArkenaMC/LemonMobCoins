@@ -1,7 +1,7 @@
 /*
  *
  *  *
- *  *  * LemonMobCoins - Kill mobs and get coins that can be used to buy awesome things
+ *  *  * MobCoins - Earn coins for killing mobs.
  *  *  * Copyright (C) 2018 Max Berkelmans AKA LemmoTresto
  *  *  *
  *  *  * This program is free software: you can redistribute it and/or modify
@@ -32,5 +32,4 @@ public interface DataProvider {
     Map<UUID, Double> loadData() throws SQLException, IOException;
 
     void saveData(Map<UUID, Double> coins) throws SQLException, IOException;
-
 }

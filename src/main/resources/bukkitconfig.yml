@@ -1,0 +1,79 @@
+# Bungeecord do you want to enable bungeecord mode? This requires the plugin to be on bungeecord and the bukkit servers you want to use this plugin on.
+bungeecord: false
+
+# Storage this is the storage section
+# This allows you to define which storage type you want to use!
+# Available storage types: flatfile, mysql
+# If none is found it will default to flatfile!
+# If choosing MySQL make sure you fill in the mysql section!
+# The mysql section is straightforward fill everything in make sure the database exists and you are good to go
+# The plugin itself already makes a table so do not worry about this.
+storage:
+  type: "flatfile"
+  mysql:
+    hostname: "localhost"
+    port: "3306"
+    username: ""
+    password: ""
+    database: "lemonmobcoins"
+
+# Mob-list
+# This list is the chances and the amount of coins the mobs drop when killed.
+#
+# Chance: the chance for the amount to be dropped. Make this 100 if you want it to always drop the amount.
+# Amount: the amount to be dropped. This can be randomized by doing:
+# amount: "minimumvalue-maximumvalue"
+# For example I want to drop a random amount ranging from 2 to 8 coins
+# Then I would do:
+# amount: "2-8"
+mob-list:
+  blaze:
+    chance: 5
+    amount: "1-2"
+  skeleton:
+    chance: 5
+    amount: 1
+  zombie:
+    chance: 5
+    amount: 1
+  creeper:
+    chance: 8
+    amount: 1
+  enderman:
+    chance: 8
+    amount: 1
+  wither:
+    chance: 50
+    amount: 1
+
+# This is the gui!
+# The command is what is used to open the shop!
+# Rows is the amount of rows you want in the gui make sure you set your items accordingly otherwise it will error.
+# The items list allows you to add as many items as you want!
+# The name // identifier can be anything and will just be used as the permission for this item.
+# Glowing is if the item looks like it is enchanted.
+# Permission is a boolean (true/false) if you want everyone to be able to buy this and not require a permission set this to false otherwise set it to true!
+# The price in mobcoins that you need to make this purchase.
+# The commands to run after purchase.
+gui:
+  name: "&8Mob Coin Shop"
+  command: "/coinshop"
+  rows: 1
+  items:
+    drill:
+      material: "DIAMOND_PICKAXE"
+      slot: 1
+      amount: 1
+      displayname: "&bDiamond &fDrill"
+      glowing: true
+      lore:
+      - "&7Efficiency VI"
+      - "&7Unbreaking IV"
+      - "&7Fortune IV"
+      - "&7Made by the most skilled blacksmiths"
+      - ''
+      - "&8* &7Price: &6$&e100"
+      permission: false
+      price: 100
+      commands:
+      - "give %player% diamond_pickaxe{display:{Lore:[\"Made by the Most Skilled Blacksmiths\"]},Enchantments:[{id:\"efficiency\",lvl:4},{id:\"fortune\",lvl:6}]} 1"
